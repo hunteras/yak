@@ -183,8 +183,3 @@ TEST(String, Operators)
     EXPECT_TRUE("c1 c2" == (String("c1") + String(" c2")));
 }
 
-
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}

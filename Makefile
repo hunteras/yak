@@ -1,19 +1,19 @@
-TARGS=testAll
-OBJS=main.o StringTest.o DateTest.o
+TARGS=libyak
+OBJS=String.o Date.o
 SRCS= $(OBJS:.o=.cpp)
 
 CXX=clang++
 CXXFLAGS:=$(CXXFLAGS) -std=c++11 -I/usr/local/include/
-LDFLAGS:=$(LDFLAGS)  -L/usr/local/lib/ -lgtest ../libyak #-lpthread
+LDFLAGS:=$(LDFLAGS)  #-L/usr/local/lib/ #-lgtest #-lpthread
 
 %.o: %.cpp
-	$(CXX) -c $< $(CXXFLAGS)
+	$(CXX) -c $< $(LDFLAGS) $(CXXFLAGS)
 
 all: $(TARGS)
 
 $(TARGS):$(OBJS)
 	rm -f $@
-	$(CXX) -o $(TARGS) $(OBJS) $(LDFLAGS) $(CXXFLAGS)
+	ar rcs $(TARGS) $(OBJS) 
 
 .PHONY: clean
 clean:
