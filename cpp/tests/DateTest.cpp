@@ -7,7 +7,7 @@
 using namespace yak;
 using namespace std;
 
-TEST(Date, Usage)
+TEST(Date, DateUsage)
 {
     Date d;
     cout << d.toString() << endl;

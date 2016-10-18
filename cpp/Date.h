@@ -32,8 +32,6 @@ namespace yak
             TimeFmt,
             DateFmt
         };
-
-        static Date Now() { return Date(::time(nullptr)); };
         
         String toString(TimeFormat fmt = DateTimeFmt){
             const char *format = 0;
@@ -54,8 +52,9 @@ namespace yak
             localtime_r(&mTime, &tm);
             const size_t w = strftime(buf, sizeof(buf), format, &tm);
             return String(buf, w);
-
         }
+
+        static Date Now() { return Date(::time(nullptr)); };
     private:
         time_t mTime;
 

@@ -1,10 +1,10 @@
 TARGS=testAll
-OBJS=main.o StringTest.o DateTest.o
+OBJS=main.o StringTest.o DateTest.o ThreadTest.o QueueTest.o
 SRCS= $(OBJS:.o=.cpp)
 
 CXX=clang++
 CXXFLAGS:=$(CXXFLAGS) -std=c++11 -I/usr/local/include/
-LDFLAGS:=$(LDFLAGS)  -L/usr/local/lib/ -lgtest ../libyak #-lpthread
+LDFLAGS:=$(LDFLAGS)  -L/usr/local/lib/ -lgtest ../libyak -lpthread
 
 %.o: %.cpp
 	$(CXX) -c $< $(CXXFLAGS)

@@ -1,13 +1,16 @@
 #+TITLE: What is yak?
 
-  Yak[fn:yak] is a c plus plus library built with basic computer concepts.
+  Yak[fn:yak] is the record of my exploration of programs.
 
-* What is =String=?
-  String is a buffer of char or wchar, with convenient interface to use.
+* What is =string=?
+  String is a sequece of char, supports sequece manipulation and different char type with different encodings.
 
-** What is =char= and =wchar_t=?
+** In C++ STL
+  Char type is char or wchar_t, sequece operations are implemented with iterators.
+  
+*** What is =char= and =wchar_t=?
    
-** What's the difference between =std::string= and =std::wstring=[fn:1]?
+*** What's the difference between =std::string= and =std::wstring=[fn:1]?
 #+BEGIN_SRC C++
 template <class _CharT,             // for <stdexcept>
           class _Traits = char_traits<_CharT>,
@@ -17,7 +20,13 @@ typedef basic_string<char, char_traits<char>, allocator<char> > string;
 typedef basic_string<wchar_t, char_traits<wchar_t>, allocator<wchar_t> > wstring;
 #+END_SRC
 
-* What's the meaning of =&&=?
+
+
+* What is process? And thread?
+
+* Others
+
+** What's the meaning of =&&=?
   Rvalue reference[fn:2], it's new in C++11.
 
 [fn:yak] a large domesticated wild ox with shaggy hair, humped shoulders, and large horns, used in Tibet as a pack animal and for its milk, meat, and hide.
