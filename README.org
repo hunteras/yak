@@ -24,6 +24,10 @@ typedef basic_string<wchar_t, char_traits<wchar_t>, allocator<wchar_t> > wstring
 
 * What is process? And thread?
 
+* What is object oreignted programming?
+
+* What is type system?
+
 * Others
 
 ** What's the meaning of =&&=?
