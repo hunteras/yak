@@ -7,7 +7,7 @@
 
 using namespace yak;
 
-void print (BSTree<int> *node)
+void print (BSNode<int> *node)
 {
     std::cout << node;
 }
@@ -32,9 +32,9 @@ std::vector<int> generate_random_vector(int size)
 }
 
 template <typename T>
-using TreeWalker = void (*)(BSTree<T> *, FuncNode<T>);
+using TreeWalker = void (*)(BSNode<T> *, FuncNode<T>);
 
-void print_tree (BSTree<int> *node, TreeWalker<int> walker, const char *comment)
+void print_tree (BSNode<int> *node, TreeWalker<int> walker, const char *comment)
 {
     std::cout << comment << std::endl;
     walker(node, print);
@@ -53,12 +53,9 @@ void print_vector (std::vector<T> &v, const char *comment)
 
 TEST(BSTree, BSTreeInit)
 {
-    BSTree<int> t(1);
+    BSNode<int> t(1);
     EXPECT_EQ(1, t.key);
 }
-
-
-
 
 class BSTreeTest : public testing::Test {
 protected: 
@@ -74,11 +71,11 @@ protected:
         std::vector<int> es = generate_random_vector(size);
 
         print_vector<int>(es, "random number");
-        tree = new BSTree<int>(*(es.begin()));
+        tree = new BSTree<int>( new BSNode<int>(*(es.begin())) );
 
         for (std::vector<int>::iterator iter = es.begin() + 1; iter != es.end(); iter++)
         {
-            BSTree<int> *node = new BSTree<int>(*iter);
+            BSNode<int> *node = new BSNode<int>(*iter);
             tree->insert(node);
         }
 
@@ -88,8 +85,10 @@ protected:
     // You should define it if there is cleanup work to do.  Otherwise,
     // you don't have to provide it.
     //
-    // virtual void TearDown() {
-    // }
+    virtual void TearDown()
+    {
+        tree->clean();
+    }
 
     BSTree<int> *tree;
     std::vector<int> numbers;
@@ -97,20 +96,20 @@ protected:
 
 TEST_F(BSTreeTest, BSTreeWalker)
 {
-    print_tree(tree, inorder_tree_walker,   "Inorder   print:");
-    print_tree(tree, preorder_tree_walker,  "Preorder  print:");
-    print_tree(tree, postorder_tree_walker, "Postorder print:");
+    print_tree(tree->root, BSTree<int>::inorder_tree_walker,   "Inorder   print:");
+    print_tree(tree->root, BSTree<int>::preorder_tree_walker,  "Preorder  print:");
+    print_tree(tree->root, BSTree<int>::postorder_tree_walker, "Postorder print:");
 }
 
 TEST_F(BSTreeTest, BSTreeSearch)
 {
     for (auto n: numbers)
     {
-        BSTree<int> *node = tree_search(tree, n);
+        BSNode<int> *node = tree->search(n);
         EXPECT_EQ(n, node->key);
     }
 
-    BSTree<int> *not_found = tree_search(tree, size);
+    BSNode<int> *not_found = tree->search(size);
     EXPECT_EQ(nullptr, not_found);    
 }
 
@@ -118,20 +117,20 @@ TEST_F(BSTreeTest, BSTreeIterSearch)
 {
     for (auto n: numbers)
     {
-        BSTree<int> *node = iterative_tree_search(tree, n);
+        BSNode<int> *node = tree->iterative_search(n);
         EXPECT_EQ(n, node->key);
     }
 
-    BSTree<int> *not_found = iterative_tree_search(tree, size);
+    BSNode<int> *not_found = tree->iterative_search(size);
     EXPECT_EQ(nullptr, not_found);    
 }
 
 TEST_F(BSTreeTest, BSTreeMinMax)
 {
-    BSTree<int> *min = tree_minimum(tree);
+    BSNode<int> *min = tree->minimum();
     EXPECT_EQ(0, min->key);
 
-    BSTree<int> *max = tree_maximum(tree);
+    BSNode<int> *max = tree->maximum();
     EXPECT_EQ(size-1, max->key);    
 }
 
@@ -139,8 +138,8 @@ TEST_F(BSTreeTest, BSTreeSuccessor)
 {
     for (auto n: numbers)
     {
-        BSTree<int> *node = tree_search(tree, n);
-        BSTree<int> *suc = tree_successor(node);
+        BSNode<int> *node = tree->search(n);
+        BSNode<int> *suc = BSTree<int>::tree_successor(node);
         if (nullptr != suc)
             EXPECT_EQ(n+1, suc->key);
         else EXPECT_EQ(size-1, node->key);
@@ -151,10 +150,22 @@ TEST_F(BSTreeTest, BSTreePredecessor)
 {
     for (auto n: numbers)
     {
-        BSTree<int> *node = tree_search(tree, n);
-        BSTree<int> *pred = tree_predecessor(node);
+        BSNode<int> *node = tree->search(n);
+        BSNode<int> *pred = BSTree<int>::tree_predecessor(node);
         if (nullptr != pred)
             EXPECT_EQ(n-1, pred->key);
         else EXPECT_EQ(0, node->key);
+    }
+}
+
+TEST_F(BSTreeTest, BSTreeDelete)
+{
+    for (auto n: numbers)
+    {
+        BSNode<int> *node = tree->search(n);
+        tree->del(node);
+
+        BSNode<int> *not_found = tree->search(n);
+        EXPECT_TRUE(not_found == nullptr);
     }
 }
