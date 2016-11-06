@@ -5,207 +5,211 @@
 #include <vector>
 #include <stack>
 #include <iostream>
+#include <list>
 
 namespace yak
 {
-    class State;
-    class Edge
+
+    // Represents an NFA state plus zero or one or two arrows exiting.
+    // if c == Match, no arrows out; matching state.
+    // If c == Split, unlabeled arrows to out and out1 (if != NULL).
+    // If c < 256, labeled arrow with character c to out.
+    enum
     {
-    public:
-        char label;
-        State *state;
-
-        Edge(char c);
-        Edge(): Edge(0) {};
-        
-        Edge(char c, State *s);
-        
-        ~Edge() {};
-
-        void set_final(bool is_final);
-        void forward(Edge *e);
-        bool is_final() const;
-        
-        friend std::ostream& operator<<(std::ostream& out, const Edge& e);
+	Match = 256,
+	Split = 257
     };
 
     class State
     {
     public:
-        int id;
-        bool is_final;
-        std::vector<Edge *> options;
+        int c;
+        State *out;
+        State *out1;
         
-        State(bool f, int i);
-        State(): State(false, 0) {};
-        
+        State(int c, State *out, State *out1) : c(c), out(out), out1(out1) {};
         ~State() {} ;
 
-        void forward(Edge *e);
+        friend std::ostream& operator<<(std::ostream& out, const State& s)
+        {
+            out << s.c;
+            return out;
+        }
+    };
+    State matchstate = { Match, nullptr, nullptr };	// matching state
 
-        friend std::ostream& operator<<(std::ostream& out, const State& s);
+    typedef union Ptrlist Ptrlist;
+    struct Frag
+    {
+        State *start;
+        Ptrlist *out;
+
+        Frag(State *start, Ptrlist *out) : start(start), out(out) {};
+        Frag() : start(nullptr), out(nullptr) {}
     };
 
-    Edge::Edge(char c) : label(c)
+    // Since the out pointers in the list are always 
+    // uninitialized, we use the pointers themselves
+    // as storage for the Ptrlists.
+    union Ptrlist
     {
-        state = new State();
+	Ptrlist *next;
+	State *s;
+    };
+
+    // Create singleton list containing just outp.
+    Ptrlist*
+    list1(State **outp)
+    {
+	Ptrlist *l;
+	
+	l = (Ptrlist*)outp;
+	l->next = NULL;
+	return l;
     }
 
-    Edge::Edge(char c, State *s): label(c), state(s) {}
-
-    void Edge::set_final(bool is_final = true)
+    // Patch the list of states at out to point to start. 
+    void
+    patch(Ptrlist *l, State *s)
     {
-        state->is_final = is_final;
+	Ptrlist *next;
+	
+	for(; l; l=next){
+            next = l->next;
+            l->s = s;
+	}
     }
 
-    void Edge::forward(Edge *e)
+    // Join the two lists l1 and l2, returning the combination. 
+    Ptrlist*
+    append(Ptrlist *l1, Ptrlist *l2)
     {
-        state->forward(e);
+	Ptrlist *oldl1;
+	
+	oldl1 = l1;
+	while(l1->next)
+            l1 = l1->next;
+	l1->next = l2;
+	return oldl1;
     }
 
-    bool Edge::is_final() const
-    {
-        return state->is_final;
-    }
-    
-    std::ostream& operator<<(std::ostream& out, const Edge& e)
-    {
-        if (0 == e.label) out << "<epsilon>";
-        else out << e.label ;
-        if (!e.is_final()) out << " --->";
-        else out << " FIN";
-        return out;
-    }
-    
-    // State impl
-    State::State(bool f, int i) : is_final(f), id(i)
-    {
-    }
-
-    void State::forward(Edge *e)
-    {
-        options.push_back(e);
-    }
-
-    std::ostream& operator<<(std::ostream& out, const State& s)
-    {
-        out << s.is_final << " edges: ";
-        std::for_each(s.options.begin(), s.options.end(), [&out](Edge *e){ out << e->label << " "; });
-
-        return out;
-    }
     
     class Nfa
     {
     public:
-        Edge *tail; // start edge
-        State *head; // ending state
 
-        Nfa(Edge *e = nullptr, State *s = nullptr) : tail(e), head(s) {}
+        Nfa() {}
         ~Nfa() {};
 
-
-        Nfa(std::string s)
+        static State *post_to_nfa(std::string post)
         {
-            tail = new Edge();
-            Edge *e = tail;
-            
-            std::stack<Edge *> paths;
-            paths.push(e);
-                
-            std::string::iterator it = s.begin();
-            std::string::iterator mark = s.begin();
-            while (it != s.end())
+            if (post == "")
+                return nullptr;
+
+            std::stack<Frag> frags;
+            Frag e1, e2, e;
+            State *s;
+            std::string::iterator it = post.begin();
+
+            while (it != post.end())
             {
                 switch(*it) {
-                    // case '.': // concatenate
-                        
-                    //     break;
+                    default:  // normal char
+                        s = new State(*it, nullptr, nullptr);
+                        frags.push(Frag(s, list1(&s->out)));
+                        break;
+                    case '.': // concatenate
+                        e2 = frags.top();
+                        frags.pop();
+                        e1 = frags.top();
+                        frags.pop();
+                        patch(e1.out, e2.start);
+                        frags.push(Frag(e1.start, e2.out));
+                        break;
                     case '|': // or
-                        
+                        e2 = frags.top();
+                        frags.pop();
+                        e1 = frags.top();
+                        frags.pop();
+                        s = new State(Split, e1.start, e2.start);
+                        frags.push(Frag(s, append(e1.out, e2.out)));
                         break;
                     case '*': // 0 or more
-                        
+                        e = frags.top();
+                        frags.pop();
+                        s = new State(Split, e.start, nullptr);
+                        patch(e.out, s);
+                        frags.push(Frag(s, list1(&s->out1)));
                         break;
                     case '+': // 1 or more
-                        
+                        e = frags.top();
+                        frags.pop();
+                        s = new State(Split, e.start, nullptr);
+                        patch(e.out, s);
+                        frags.push(Frag(e.start, list1(&s->out1)));
                         break;
                     case '?': // 0 or 1
-                        
-                        break;
-                    case '[': // begin choices
-                        
-                        break;
-                    case ']': // end choices
-                        
-                        break;
-                    case '(': // begin char set
-                        
-                        break;
-                    case ')': // end char set
-                        
-                        break;
-                    default:  // normal char
-                        std::cout << "default :" << *it << std::endl;
-                        Edge *newer = new Edge(*it);
-
-                        Edge *last = (Edge *)paths.top();
-                        last->forward(newer);
-
-                        paths.pop();
-                        paths.push(newer);
-                        
+                        e = frags.top();
+                        frags.pop();
+                        s = new State(Split, e.start, nullptr);
+                        frags.push(Frag(s, append(e.out, list1(&s->out1))));
                         break;
                 }
-
                 it++;
             }
 
-            Edge *last = (Edge *)paths.top();
-            last->set_final();
-            head = last->state;
+            e = frags.top();
+            frags.pop();
+            if (!frags.empty())
+                return nullptr;
+
+            patch(e.out, &matchstate);
+            return e.start;
         }
+            
 
         friend std::ostream& operator<<(std::ostream& out, const Nfa& nfa)
         {
-            out << "label: " << *(nfa.tail) << " with state " << *(nfa.tail->state);
+            //out << "label: " << *(nfa.tail) << " with state " << *(nfa.tail->state);
             return out;
         }
 
-        void walk()
-        {
-            std::stack<Edge *> paths;
-            Edge *e = tail;
+        // void walk()
+        // {
+        //     std::stack<Edge *> paths;
+        //     Edge *e = tail;
             
-            for(;;)
-            {
-                if (e->is_final())
-                {
-                    std::cout << *e << std::endl;
+        //     for(;;)
+        //     {
+        //         if (e->is_final())
+        //         {
+        //             std::cout << *e << std::endl;
                     
-                    if (!paths.empty())
-                    {
-                        // final edge
-                        e = (Edge *)paths.top();
-                        paths.pop();
-                    }
-                    else
-                    {
-                        break; //done
-                    }
-                }
-                else // normal edge
-                {
-                    std::cout << *e << " ";
-                    std::for_each(e->state->options.begin(),
-                                  e->state->options.end(),
-                                  [&paths](Edge *path) { paths.push(path); });
+        //             if (!paths.empty())
+        //             {
+        //                 // final edge
+        //                 e = (Edge *)paths.top();
+        //                 paths.pop();
+        //             }
+        //             else
+        //             {
+        //                 break; //done
+        //             }
+        //         }
+        //         else // normal edge
+        //         {
+        //             std::cout << *e << " ";
+        //             std::for_each(e->state->options.begin(),
+        //                           e->state->options.end(),
+        //                           [&paths](Edge *path) { paths.push(path); });
 
-                    e = (Edge *)paths.top();
-                    paths.pop();
-                }
-            }
-        }
+        //             e = (Edge *)paths.top();
+        //             paths.pop();
+        //         }
+        //     }
+        // }
+
+        
     };
     
     // class Regex
