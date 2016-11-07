@@ -8,9 +8,13 @@ using namespace yak;
 
 TEST(Regex, RegexNfa)
 {
-    // Nfa re("abcd");
-    // //std::cout << re << std::endl;
-    // re.walk();
+    std::string post = re_to_post("(a|b)c");
+    std::cout << post << std::endl;
+    Nfa *nfa = post_to_nfa(post);
+    //std::cout << *(nfa->start) << std::endl;
+    //nfa->walk();
+    std::cout << nfa->match("ac") << std::endl;;
+    //std::cout << nfa->match("ac") << std::endl;
 }
 
 TEST(Regex, RegexToPost)
