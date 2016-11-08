@@ -1,5 +1,5 @@
 TARGS=libyak
-OBJS=String.o Date.o
+OBJS=Date.o
 SRCS= $(OBJS:.o=.cpp)
 
 CXX=clang++
