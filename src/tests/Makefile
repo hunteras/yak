@@ -1,5 +1,5 @@
 TARGS=testAll
-OBJS=main.o StringTest.o DateTest.o ThreadTest.o BSTreeTest.o RegexTest.o
+OBJS=main.o StringTest.o DateTest.o ThreadTest.o BSTreeTest.o RegexTest.o NetTest.o
 SRCS= $(OBJS:.o=.cpp)
 
 CXX=clang++
