@@ -183,3 +183,10 @@ TEST(String, Operators)
     EXPECT_TRUE("c1 c2" == (String("c1") + String(" c2")));
 }
 
+
+TEST(String, StringFormat)
+{
+    String s = string_format("%s", indexData);
+
+    EXPECT_EQ(0, strcmp(s.c_str(), indexData));
+}

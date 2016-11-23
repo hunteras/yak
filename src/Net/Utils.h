@@ -7,6 +7,8 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include "Error.h"
+
 namespace yak
 {
     const char *byte_order()
@@ -29,7 +31,8 @@ namespace yak
             return "error short size";
     }
 
-    // Read n bytes from a descriptor. 
+    // Read n bytes from a descriptor.
+    static
     ssize_t						
     readn(int fd, void *vptr, size_t n)
     {
@@ -54,7 +57,8 @@ namespace yak
 	return(n - nleft);		/* return >= 0 */
     }
 
-    // Write n bytes to a descriptor. 
+    // Write n bytes to a descriptor.
+    static
     ssize_t
     writen(int fd, const void *vptr, size_t n)
     {
@@ -78,5 +82,33 @@ namespace yak
 	return(n);
     }
 
+    static
+    void
+    Close(int fd)
+    {
+	if (close(fd) == -1)
+            Error::err_sys("close error");
+    }
+
+    static
+    void
+    Write(int fd, void *ptr, size_t nbytes)
+    {
+	if (write(fd, ptr, nbytes) != nbytes)
+            Error::err_sys("write error");
+    }
+
+    static
+    ssize_t
+    Read(int fd, void *ptr, size_t nbytes)
+    {
+	ssize_t		n;
+
+	if ( (n = read(fd, ptr, nbytes)) == -1)
+            Error::err_sys("read error");
+	return(n);
+    }
+
+    
 }
 #endif
