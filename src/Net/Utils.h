@@ -102,11 +102,19 @@ namespace yak
     ssize_t
     Read(int fd, void *ptr, size_t nbytes)
     {
-	ssize_t		n;
+	ssize_t	n;
 
 	if ( (n = read(fd, ptr, nbytes)) == -1)
             Error::err_sys("read error");
 	return(n);
+    }
+
+    static
+    void
+    Writen(int fd, void *ptr, size_t nbytes)
+    {
+	if (writen(fd, ptr, nbytes) != nbytes)
+            Error::err_sys("writen error");
     }
 
     

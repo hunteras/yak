@@ -4,7 +4,7 @@
 #include <iostream>
 
 namespace yak {
-    
+
     template <typename T>
     class BSNode
     {
@@ -16,7 +16,7 @@ namespace yak {
 
         BSNode(T k, BSNode *l = nullptr, BSNode *r = nullptr, BSNode *p = nullptr)
             : key(k), left(l), right(r), parent(p) {}
-        
+
         ~BSNode()
         {} ;
 
@@ -27,7 +27,7 @@ namespace yak {
                 t = this->parent;
             return t;
         }
-        
+
         void insert(BSNode<T> *z)
         {
             BSNode<T> *y = nullptr;
@@ -61,17 +61,17 @@ namespace yak {
             out << " parent: ";
             if (nullptr == node->parent) out << "NULL ";
             else out << node->parent->key;
-            
+
             out << std::endl;
-            
+
             return out;
         }
-        
+
     };
 
     template <typename T>
     using FuncNode = void (*) (BSNode<T> *);
-    
+
     template <typename T>
     class BSTree
     {
@@ -80,12 +80,12 @@ namespace yak {
 
         BSTree(BSNode<T> *r = nullptr)
             : root(r) {}
-        
+
         ~BSTree()
         {} ;
 
         void insert(BSNode<T> *node) { root->insert(node); }
-            
+
         static
         void
         inorder_tree_walker(BSNode<T> *node, FuncNode<T> fn)
@@ -121,7 +121,7 @@ namespace yak {
                 fn(node);
             }
         }
-        
+
         void
         inorder_walker(FuncNode<T> fn) { inorder_tree_walker(root, fn); }
 
@@ -130,7 +130,7 @@ namespace yak {
 
         void
         postorder_walker(FuncNode<T> fn) { postorder_tree_walker(root, fn); }
-        
+
         static
         BSNode<T> *
         tree_search(BSNode<T> *node, T k)
@@ -174,7 +174,7 @@ namespace yak {
 
         BSNode<T> *
         minimum() { return tree_minimum(root); }
-        
+
         static
         BSNode<T> *
         tree_maximum(BSNode<T> *node)
@@ -187,7 +187,7 @@ namespace yak {
 
         BSNode<T> *
         maximum() { return tree_maximum(root); }
-        
+
         static
         BSNode<T> *
         tree_successor(BSNode<T> *node)

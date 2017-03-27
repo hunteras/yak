@@ -1,4 +1,4 @@
-TARGS=daytimetcpcli daytimetcpserv daytimetcpsrv1
+TARGS=tcpservconpro tcpcli01
 
 CXX=clang++
 CXXFLAGS:=$(CXXFLAGS) -std=c++11 -I/usr/local/include/ -I../../ -I../
