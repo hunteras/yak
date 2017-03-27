@@ -3,3 +3,5 @@
 libyak
 testAll
 .DS_Store
+/src/Net/examples/echo/tcpservconpro
+/src/Net/examples/tcpcli
